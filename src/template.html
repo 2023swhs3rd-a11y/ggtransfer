@@ -4,7 +4,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
-/* Layout: 상단 조회 바(연도·교과·지역) → 요약 → [지도 | 지역 상세] 2열 → 순위 그래프 → 표. 칠판 녹색 + 경쟁도 적갈색 단계색 */
+/* Layout: 상단 조회 바(연도·교과·지역) → 요약 → [지도 | 지역 상세] 2열 → 순위 그래프 → 표. 칠판 녹색 + 경합도 적갈색 단계색 */
 :root{
   --bg:#f5f7f4; --surface:#ffffff; --ink:#1d2622; --muted:#5d6b64; --line:#d9e0db;
   --accent:#2f5d50; --accent-soft:#e2ece7; --none:#e6e9e6;
@@ -133,7 +133,7 @@ footer{font-size:12px;color:var(--muted)}
       <div class="panel-head">
         <div><h2 id="mapTitle">지도</h2><p class="sub" id="mapSub"></p></div>
         <div class="seg" id="metric" role="group" aria-label="지도 색상 기준">
-          <button type="button" data-m="rate" aria-pressed="true">충족률</button>
+          <button type="button" data-m="rate" aria-pressed="true">배치율</button>
           <button type="button" data-m="cut" aria-pressed="false">커트라인</button>
           <button type="button" data-m="hope" aria-pressed="false">희망 인원</button>
         </div>
@@ -147,9 +147,9 @@ footer{font-size:12px;color:var(--muted)}
 
   <section class="panel">
     <div class="panel-head">
-      <div><h2 id="rankTitle">지역별 비교</h2><p class="sub">막대 전체 = 희망 인원, 진한 부분 = 배치 인원. 충족률이 낮은(경쟁이 센) 순서입니다.</p></div>
+      <div><h2 id="rankTitle">지역별 비교</h2><p class="sub">막대 전체 = 희망 인원, 진한 부분 = 배치 인원. 배치율이 낮은(경합이 심한) 순서입니다.</p></div>
       <div class="seg" id="sort" role="group" aria-label="정렬 기준">
-        <button type="button" data-s="rate" aria-pressed="true">충족률순</button>
+        <button type="button" data-s="rate" aria-pressed="true">배치율순</button>
         <button type="button" data-s="cut" aria-pressed="false">커트라인순</button>
         <button type="button" data-s="hope" aria-pressed="false">희망 인원순</button>
       </div>
@@ -174,7 +174,7 @@ footer{font-size:12px;color:var(--muted)}
     <h2>읽는 법</h2>
     <div class="guide">
       <div><b>18/18(2.0)</b>배치 18명 / 희망 18명, 커트라인 전보년수 2년 0개월. 괄호 안 숫자는 <code>년.개월</code>이라 <code>4.10</code>은 4년 10개월로, 4.1년보다 깁니다.</div>
-      <div><b>충족률</b>배치 ÷ 희망. 100%면 희망자가 모두 그 지역으로 갔고, 낮을수록 경쟁이 셌다는 뜻입니다. 100%인 곳의 커트라인은 경쟁 없이 정해진 값이라 참고만 하세요.</div>
+      <div><b>배치율</b>배치 ÷ 희망. 100%면 희망자가 모두 그 지역으로 갔고, 낮을수록 경합이 심했다는 뜻입니다. 100%인 곳의 커트라인은 경합 없이 정해진 값이라 참고만 하세요.</div>
       <div><b>빈칸과 괄호 없음</b>빈칸은 그해 해당 교과 희망자가 없었던 경우입니다. <code>1/1</code>처럼 괄호가 없는 칸은 원자료에 전보년수가 적혀 있지 않습니다.</div>
     </div>
   </section>
@@ -206,7 +206,7 @@ const pct=x=>`${Math.round(x*100)}%`;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
 const SCALES={
-  rate:{label:"충족률(배치÷희망)",bins:[[1.0001,"100%",1],[0.8,"80~99%",2],[0.6,"60~79%",3],[0.4,"40~59%",4],[0,"40% 미만",5]],
+  rate:{label:"배치율(배치÷희망)",bins:[[1.0001,"100%",1],[0.8,"80~99%",2],[0.6,"60~79%",3],[0.4,"40~59%",4],[0,"40% 미만",5]],
     cls(d){if(!d)return 0;const x=d.a/d.h;if(x>=1)return 1;if(x>=.8)return 2;if(x>=.6)return 3;if(x>=.4)return 4;return 5},val:d=>pct(d.a/d.h)},
   cut:{label:"커트라인 전보년수",bins:[[0,"2년 미만",1],[0,"2~3년",2],[0,"3~4년",3],[0,"4~6년",4],[0,"6년 이상",5]],
     cls(d){if(!d||d.m==null)return 0;const y=d.m/12;if(y<2)return 1;if(y<3)return 2;if(y<4)return 3;if(y<6)return 4;return 5},val:d=>d.m==null?"–":fmtShort(d.m)},
@@ -239,10 +239,10 @@ function renderStats(){
   const short=ds.filter(([,d])=>d.a<d.h);
   const top=[...ds].filter(([,d])=>d.m!=null&&d.a<d.h).sort((a,b)=>b[1].m-a[1].m)[0];
   $("stats").innerHTML=`
-    <div class="stat"><span class="k">${st.year} ${esc(st.subj)} 배치 / 희망</span><span class="v">${A} / ${H}</span><span class="n">${ds.length}개 지역에서 희망</span></div>
-    <div class="stat"><span class="k">전체 충족률</span><span class="v">${H?pct(A/H):"–"}</span><span class="n">희망자 ${H-A}명이 원하는 지역에 가지 못함</span></div>
-    <div class="stat"><span class="k">경쟁 지역 (배치 &lt; 희망)</span><span class="v">${short.length}곳</span><span class="n">${short.length?short.sort((a,b)=>a[1].a/a[1].h-b[1].a/b[1].h).slice(0,3).map(([r])=>fullName(r)).join(", "):"모든 지역 전원 배치"}</span></div>
-    <div class="stat"><span class="k">가장 높은 커트라인 (경쟁 지역)</span><span class="v">${top?fmtM(top[1].m):"–"}</span><span class="n">${top?fullName(top[0])+" · "+cell(top[1]):"경쟁 지역 없음"}</span></div>`;
+    <div class="stat"><span class="k">${st.year} ${esc(st.subj)} 배치 / 희망</span><span class="v">${A} / ${H}</span><span class="n">${ds.length}개 지역</span></div>
+    <div class="stat"><span class="k">전체 배치율</span><span class="v">${H?pct(A/H):"–"}</span><span class="n">희망자 ${H-A}명이 원하는 지역에 배치되지 못함</span></div>
+    <div class="stat"><span class="k">경합 지역 (배치 &lt; 희망)</span><span class="v">${short.length}곳</span><span class="n">${short.length?short.sort((a,b)=>a[1].a/a[1].h-b[1].a/b[1].h).slice(0,3).map(([r])=>fullName(r)).join(", "):"모든 지역 전원 배치"}</span></div>
+    <div class="stat"><span class="k">가장 높은 커트라인 (경합 지역)</span><span class="v">${top?fmtM(top[1].m):"–"}</span><span class="n">${top?fullName(top[0])+" · "+cell(top[1]):"경합 지역 없음"}</span></div>`;
 }
 
 // ---------- map ----------
@@ -259,7 +259,7 @@ function buildMap(){
   svg.addEventListener("keydown",e=>{const r=e.target.dataset?.r;if(r&&(e.key==="Enter"||e.key===" ")){e.preventDefault();st.region=r;render()}});
   svg.addEventListener("pointermove",e=>{const r=e.target.dataset?.r;if(!r||e.pointerType==="touch"){tip.hidden=true;return}
     const d=get(st.year,st.subj,r),box=svg.parentNode.getBoundingClientRect();
-    tip.innerHTML=`<b>${fullName(r)}</b> · ${esc(st.subj)} ${st.year}<br>${d?`배치 ${d.a} / 희망 ${d.h} · 충족률 ${pct(d.a/d.h)}<br>커트라인 ${fmtM(d.m)}`:"희망자 없음"}`;
+    tip.innerHTML=`<b>${fullName(r)}</b> · ${esc(st.subj)} ${st.year}<br>${d?`배치 ${d.a} / 희망 ${d.h} · 배치율 ${pct(d.a/d.h)}<br>커트라인 ${fmtM(d.m)}`:"희망자 없음"}`;
     tip.style.left=(e.clientX-box.left)+"px";tip.style.top=(e.clientY-box.top)+"px";tip.hidden=false});
   svg.addEventListener("pointerleave",()=>tip.hidden=true);
 }
@@ -305,10 +305,10 @@ function renderDetail(){
     <div class="kv">
       <div><div class="k">${st.year} 배치/희망</div><div class="v">${d?`${d.a}/${d.h}`:"희망 없음"}</div></div>
       <div><div class="k">${st.year} 커트라인</div><div class="v">${d?fmtM(d.m):"–"}</div></div>
-      <div><div class="k">${YEARS.length}년 누적 충족률</div><div class="v">${avgRate==null?"–":pct(avgRate)}</div></div>
+      <div><div class="k">${YEARS.length}년 누적 배치율</div><div class="v">${avgRate==null?"–":pct(avgRate)}</div></div>
     </div>
     <div><h3 class="sub" style="margin:4px 0">배치 / 희망 인원</h3>${trendSvg(rows)}</div>
-    <div><h3 class="sub" style="margin:4px 0">커트라인 전보년수 <span style="font-weight:400">(● 경쟁 있음 · ○ 전원 배치)</span></h3>${cutSvg(rows)}</div>
+    <div><h3 class="sub" style="margin:4px 0">커트라인 전보년수 <span style="font-weight:400">(● 경합 있음 · ○ 전원 배치)</span></h3>${cutSvg(rows)}</div>
     <p class="note">${YEARS.length}년 중 ${have.length}개 연도에 희망자가 있었고, 그중 ${comp}개 연도는 희망자보다 배치가 적었습니다.</p>`;
 }
 
@@ -325,7 +325,7 @@ $("rank").addEventListener("click",e=>{const b=e.target.closest("[data-r]");if(b
 
 // ---------- table ----------
 const rcls=d=>d?SCALES.rate.cls(d):0;
-const td=d=>d?`<td class="r${rcls(d)}" title="충족률 ${pct(d.a/d.h)} · 커트라인 ${fmtM(d.m)}">${d.a}/${d.h}${d.m!=null?`<small>${fmtShort(d.m)}</small>`:""}</td>`:`<td class="emp">·</td>`;
+const td=d=>d?`<td class="r${rcls(d)}" title="배치율 ${pct(d.a/d.h)} · 커트라인 ${fmtM(d.m)}">${d.a}/${d.h}${d.m!=null?`<small>${fmtShort(d.m)}</small>`:""}</td>`:`<td class="emp">·</td>`;
 function renderTable(){
   let head,rows,title,sub;
   if(st.tmode==="subj"){
@@ -341,7 +341,7 @@ function renderTable(){
     head=`<th>교과</th>`+R.map(r=>`<th>${r}</th>`).join("");
     rows=subjOrder.filter(s=>R.some(r=>get(st.year,s,r))).map(s=>`<tr data-s="${esc(s)}"><th>${esc(s)}</th>${R.map(r=>td(get(st.year,s,r))).join("")}</tr>`);
   }
-  $("tableTitle").textContent=title;$("tableSub").textContent=sub+" 칸 색은 충족률, 작은 숫자는 커트라인(년.개월)입니다.";
+  $("tableTitle").textContent=title;$("tableSub").textContent=sub+" 칸 색은 배치율, 작은 숫자는 커트라인(년.개월)입니다.";
   $("table").innerHTML=`<table><thead><tr>${head}</tr></thead><tbody>${rows.join("")}</tbody></table>`;
   $("tlegend").innerHTML=SCALES.rate.bins.map(([,l,c])=>`<span><i style="background:${fillVar(c)}"></i>${l}</span>`).join("");
 }

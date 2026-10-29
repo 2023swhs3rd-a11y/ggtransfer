@@ -1,18 +1,16 @@
 <title>경기 중등 청간전보 지도</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
+@font-face{font-family:"Pretendard";src:url(data:font/woff2;base64,__FONT__) format("woff2");font-weight:45 920;font-style:normal;font-display:swap}
 /* Layout: 상단 조회 바(연도·교과·지역) → 요약 → [지도 | 지역 상세] 2열 → 순위 그래프 → 표. 칠판 녹색 + 경합도 적갈색 단계색 */
 :root{
   --bg:#f5f7f4; --surface:#ffffff; --ink:#1d2622; --muted:#5d6b64; --line:#d9e0db;
   --accent:#2f5d50; --accent-soft:#e2ece7; --none:#e6e9e6;
   --s1:#f3e7cf; --s2:#ecc68f; --s3:#df9858; --s4:#c4643a; --s5:#8f3a24;
   --hope:#cfd9d3; --placed:#2f5d50; --cut:#b5532e; --onhot:#ffffff;
-  --display:"Do Hyeon","IBM Plex Sans KR",system-ui,sans-serif;
-  --body:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
-  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --display:"Pretendard",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --body:"Pretendard",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --mono:"Pretendard",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#121815; --surface:#1a221e; --ink:#e4ebe7; --muted:#9aa9a1; --line:#2c3732;
@@ -25,14 +23,14 @@
   --s1:#4a4232; --s2:#7d6136; --s3:#a86a3a; --s4:#cf7a4c; --s5:#f0a07a;
   --hope:#34433c; --placed:#7fc0a8; --cut:#f0a07a; --onhot:#1a1410; color-scheme:dark}
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-variant-numeric:tabular-nums;font-size:15px;line-height:1.55}
 .wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px;display:grid;gap:20px}
 header{display:grid;gap:6px}
 .eyebrow{font-size:12px;letter-spacing:.08em;color:var(--accent);font-weight:600}
-h1{font-family:var(--display);font-weight:400;font-size:clamp(28px,4.4vw,40px);line-height:1.15;margin:0;text-wrap:balance}
+h1{font-family:var(--display);font-weight:800;letter-spacing:-.02em;font-size:clamp(28px,4.4vw,40px);line-height:1.15;margin:0;text-wrap:balance}
 .lede{margin:0;color:var(--muted);max-width:68ch}
 .lede b{color:var(--ink);font-weight:600}
-h2{font-family:var(--display);font-weight:400;font-size:22px;margin:0;line-height:1.2}
+h2{font-family:var(--display);font-weight:700;letter-spacing:-.01em;font-size:22px;margin:0;line-height:1.2}
 .sub{color:var(--muted);font-size:13px;margin:0}
 
 .controls{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:10px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:12px 20px;align-items:end}
@@ -50,7 +48,7 @@ select{font:inherit;font-size:14px;padding:6px 10px;border:1px solid var(--line)
 .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:2px;min-width:0}
 .stat .k{font-size:12px;color:var(--muted)}
-.stat .v{font-family:var(--display);font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat .v{font-family:var(--display);font-weight:700;font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
 .stat .n{font-size:12px;color:var(--muted)}
 
 .grid2{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:20px;align-items:start}
@@ -74,7 +72,7 @@ select{font:inherit;font-size:14px;padding:6px 10px;border:1px solid var(--line)
 .tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:13px;padding:6px 9px;border-radius:6px;white-space:nowrap;transform:translate(-50%,-115%);line-height:1.4}
 
 .detail-title{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
-.detail-title .big{font-family:var(--display);font-size:30px;line-height:1}
+.detail-title .big{font-family:var(--display);font-weight:800;font-size:30px;line-height:1}
 .kv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .kv div{border-top:2px solid var(--line);padding-top:6px;min-width:0}
 .kv .k{font-size:12px;color:var(--muted)}

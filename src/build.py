@@ -12,8 +12,11 @@ s = subset.Subsetter(opts); s.populate(text=''.join(c for c in chars if ord(c) >
 buf = io.BytesIO(); font.flavor = 'woff2'; font.save(buf)
 body = t.replace('__FONT__', base64.b64encode(buf.getvalue()).decode()).replace('__DATA__', data).replace('__MAP__', mp)
 open('../artifact.html', 'w').write(body)
+import urllib.parse
+fav = urllib.parse.quote(open('favicon.svg').read().strip(), safe=' =:/')
 head = ('<!doctype html>\n<html lang="ko">\n<head>\n<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
+        f'<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,{fav}">\n'
         '<style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>\n</head>\n<body>\n')
 open('../index.html', 'w').write(head + body + '\n</body>\n</html>\n')
 print('font subset', len(buf.getvalue()), 'bytes; index.html', len(head + body))

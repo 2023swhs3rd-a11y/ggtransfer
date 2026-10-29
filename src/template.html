@@ -92,11 +92,12 @@ select{font:inherit;font-size:14px;padding:6px 10px;border:1px solid var(--line)
 .bar>span{position:absolute;inset:0 auto 0 0;background:var(--placed)}
 .rank-row .r{font-family:var(--mono);font-size:12px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 
-.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+.table-wrap{overflow:auto;max-height:min(72vh,760px);border:1px solid var(--line);border-radius:10px;overscroll-behavior:contain}
 table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
 th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
-thead th{position:sticky;top:0;background:var(--surface);font-weight:600;color:var(--muted);font-size:12px}
-tbody th{text-align:left;font-weight:600;position:sticky;left:0;background:var(--surface)}
+thead th{position:sticky;top:0;z-index:2;background:var(--surface);font-weight:600;color:var(--muted);font-size:12px;box-shadow:inset 0 -1px 0 var(--line)}
+thead th:first-child{left:0;z-index:3}
+tbody th{text-align:left;font-weight:600;position:sticky;left:0;z-index:1;background:var(--surface);box-shadow:inset -1px 0 0 var(--line)}
 td{font-family:var(--mono);font-size:12px}
 td.r1{background:var(--s1)} td.r2{background:var(--s2)} td.r3{background:var(--s3);color:var(--onhot)} td.r4{background:var(--s4);color:var(--onhot)} td.r5{background:var(--s5);color:var(--onhot)}
 td.emp{color:var(--line)}

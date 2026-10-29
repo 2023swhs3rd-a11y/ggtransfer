@@ -1,0 +1,357 @@
+<title>경기 중등 청간전보 지도</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: 상단 조회 바(연도·교과·지역) → 요약 → [지도 | 지역 상세] 2열 → 순위 그래프 → 표. 칠판 녹색 + 경쟁도 적갈색 단계색 */
+:root{
+  --bg:#f5f7f4; --surface:#ffffff; --ink:#1d2622; --muted:#5d6b64; --line:#d9e0db;
+  --accent:#2f5d50; --accent-soft:#e2ece7; --none:#e6e9e6;
+  --s1:#f3e7cf; --s2:#ecc68f; --s3:#df9858; --s4:#c4643a; --s5:#8f3a24;
+  --hope:#cfd9d3; --placed:#2f5d50; --cut:#b5532e; --onhot:#ffffff;
+  --display:"Do Hyeon","IBM Plex Sans KR",system-ui,sans-serif;
+  --body:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121815; --surface:#1a221e; --ink:#e4ebe7; --muted:#9aa9a1; --line:#2c3732;
+  --accent:#7fc0a8; --accent-soft:#22332c; --none:#252e2a;
+  --s1:#4a4232; --s2:#7d6136; --s3:#a86a3a; --s4:#cf7a4c; --s5:#f0a07a;
+  --hope:#34433c; --placed:#7fc0a8; --cut:#f0a07a; --onhot:#1a1410; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121815; --surface:#1a221e; --ink:#e4ebe7; --muted:#9aa9a1; --line:#2c3732;
+  --accent:#7fc0a8; --accent-soft:#22332c; --none:#252e2a;
+  --s1:#4a4232; --s2:#7d6136; --s3:#a86a3a; --s4:#cf7a4c; --s5:#f0a07a;
+  --hope:#34433c; --placed:#7fc0a8; --cut:#f0a07a; --onhot:#1a1410; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px;display:grid;gap:20px}
+header{display:grid;gap:6px}
+.eyebrow{font-size:12px;letter-spacing:.08em;color:var(--accent);font-weight:600}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(28px,4.4vw,40px);line-height:1.15;margin:0;text-wrap:balance}
+.lede{margin:0;color:var(--muted);max-width:68ch}
+.lede b{color:var(--ink);font-weight:600}
+h2{font-family:var(--display);font-weight:400;font-size:22px;margin:0;line-height:1.2}
+.sub{color:var(--muted);font-size:13px;margin:0}
+
+.controls{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:10px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:12px 20px;align-items:end}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.field{display:grid;gap:4px;min-width:0}
+.field>span{font-size:12px;color:var(--muted);letter-spacing:.04em}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:5px 11px;border-radius:999px;cursor:pointer;font-variant-numeric:tabular-nums}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--bg);font-weight:600}
+.chip:disabled{cursor:not-allowed;opacity:.55;border-style:dashed}
+select{font:inherit;font-size:14px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);min-width:9em;max-width:100%}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:2px;min-width:0}
+.stat .k{font-size:12px;color:var(--muted)}
+.stat .v{font-family:var(--display);font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat .n{font-size:12px;color:var(--muted)}
+
+.grid2{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:20px;align-items:start}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:12px;min-width:0}
+.panel-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 12px;align-items:end}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{font:inherit;font-size:13px;border:0;background:transparent;color:var(--muted);padding:5px 10px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--ink);font-weight:600}
+
+.map-box{position:relative}
+#map{width:100%;height:auto;display:block;max-height:78vh}
+#map path{stroke:var(--surface);stroke-width:1.4;cursor:pointer;transition:opacity .15s}
+#map path:hover{opacity:.82}
+#map path.sel{stroke:var(--ink);stroke-width:3}
+#map text{pointer-events:none;font-family:var(--body);text-anchor:middle;paint-order:stroke;stroke:var(--surface);stroke-width:3px;stroke-linejoin:round}
+#map .ml{font-size:13px;font-weight:600;fill:var(--ink)}
+#map .mv{font-size:12px;fill:var(--ink);font-family:var(--mono)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:var(--muted);align-items:center}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-3px;margin-right:4px;border:1px solid var(--line)}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:13px;padding:6px 9px;border-radius:6px;white-space:nowrap;transform:translate(-50%,-115%);line-height:1.4}
+
+.detail-title{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.detail-title .big{font-family:var(--display);font-size:30px;line-height:1}
+.kv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.kv div{border-top:2px solid var(--line);padding-top:6px;min-width:0}
+.kv .k{font-size:12px;color:var(--muted)}
+.kv .v{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+.chart{width:100%;height:auto;display:block}
+.chart text{font-family:var(--body);font-size:11px;fill:var(--muted)}
+.chart .val{fill:var(--ink);font-family:var(--mono);font-size:11px}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.note{font-size:12px;color:var(--muted);margin:0}
+
+.rank{display:grid;gap:3px}
+.rank-row{display:grid;grid-template-columns:6.5em minmax(0,1fr) 9.5em;gap:8px;align-items:center;font-size:13px;cursor:pointer;padding:2px 4px;border-radius:6px;border:0;background:transparent;color:inherit;font:inherit;text-align:left;width:100%}
+.rank-row:hover{background:var(--accent-soft)}
+.rank-row.sel{background:var(--accent-soft);font-weight:600}
+.bar{position:relative;height:14px;background:var(--hope);border-radius:3px;overflow:hidden}
+.bar>span{position:absolute;inset:0 auto 0 0;background:var(--placed)}
+.rank-row .r{font-family:var(--mono);font-size:12px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+thead th{position:sticky;top:0;background:var(--surface);font-weight:600;color:var(--muted);font-size:12px}
+tbody th{text-align:left;font-weight:600;position:sticky;left:0;background:var(--surface)}
+td{font-family:var(--mono);font-size:12px}
+td.r1{background:var(--s1)} td.r2{background:var(--s2)} td.r3{background:var(--s3);color:var(--onhot)} td.r4{background:var(--s4);color:var(--onhot)} td.r5{background:var(--s5);color:var(--onhot)}
+td.emp{color:var(--line)}
+td small{display:block;font-family:var(--body);font-size:11px;opacity:.85}
+tbody tr:hover th,tbody tr:hover td:not([class^="r"]){background:var(--accent-soft)}
+.guide{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;font-size:13px;color:var(--muted)}
+.guide b{color:var(--ink);display:block;font-size:14px;margin-bottom:2px}
+.guide code{font-family:var(--mono);color:var(--ink);background:var(--accent-soft);padding:0 4px;border-radius:4px}
+footer{font-size:12px;color:var(--muted)}
+@media (max-width:860px){.grid2{grid-template-columns:minmax(0,1fr)}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.guide{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:860px){.controls{position:static}}
+@media (max-width:480px){.rank-row{grid-template-columns:5em minmax(0,1fr) 8em}.kv .v{font-size:16px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">경기도교육청 중등교사 정기인사 · 교육지원청 간 전보</div>
+    <h1>경기 중등 청간전보 지도</h1>
+    <p class="lede">2020~2025년 교육지원청별·교과별 <b>배치 인원 / 희망 인원 (커트라인 전보년수)</b>를 지도와 그래프, 표로 살펴봅니다. 지도나 그래프에서 지역을 누르면 그 지역의 연도별 추이를 볼 수 있습니다.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="조회 조건">
+    <div class="field"><span>연도</span><div class="chips" id="years"></div></div>
+    <label class="field"><span>교과</span><select id="subj"></select></label>
+    <label class="field"><span>지역(교육지원청)</span><select id="region"></select></label>
+  </div>
+
+  <section class="stats" id="stats" aria-live="polite"></section>
+
+  <section class="grid2">
+    <div class="panel">
+      <div class="panel-head">
+        <div><h2 id="mapTitle">지도</h2><p class="sub" id="mapSub"></p></div>
+        <div class="seg" id="metric" role="group" aria-label="지도 색상 기준">
+          <button type="button" data-m="rate" aria-pressed="true">충족률</button>
+          <button type="button" data-m="cut" aria-pressed="false">커트라인</button>
+          <button type="button" data-m="hope" aria-pressed="false">희망 인원</button>
+        </div>
+      </div>
+      <div class="map-box"><svg id="map" role="img" aria-label="경기도 교육지원청 지도"></svg><div class="tip" id="tip" hidden></div></div>
+      <div class="legend" id="legend"></div>
+    </div>
+
+    <div class="panel" id="detail"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div><h2 id="rankTitle">지역별 비교</h2><p class="sub">막대 전체 = 희망 인원, 진한 부분 = 배치 인원. 충족률이 낮은(경쟁이 센) 순서입니다.</p></div>
+      <div class="seg" id="sort" role="group" aria-label="정렬 기준">
+        <button type="button" data-s="rate" aria-pressed="true">충족률순</button>
+        <button type="button" data-s="cut" aria-pressed="false">커트라인순</button>
+        <button type="button" data-s="hope" aria-pressed="false">희망 인원순</button>
+      </div>
+    </div>
+    <div class="rank" id="rank"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div><h2 id="tableTitle">표</h2><p class="sub" id="tableSub"></p></div>
+      <div class="seg" id="tmode" role="group" aria-label="표 보기 방식">
+        <button type="button" data-t="subj" aria-pressed="true">선택 교과 · 지역×연도</button>
+        <button type="button" data-t="region" aria-pressed="false">선택 지역 · 교과×연도</button>
+        <button type="button" data-t="year" aria-pressed="false">선택 연도 · 교과×지역</button>
+      </div>
+    </div>
+    <div class="table-wrap" id="table"></div>
+    <div class="legend" id="tlegend"></div>
+  </section>
+
+  <section class="panel">
+    <h2>읽는 법</h2>
+    <div class="guide">
+      <div><b>18/18(2.0)</b>배치 18명 / 희망 18명, 커트라인 전보년수 2년 0개월. 괄호 안 숫자는 <code>년.개월</code>이라 <code>4.10</code>은 4년 10개월로, 4.1년보다 깁니다.</div>
+      <div><b>충족률</b>배치 ÷ 희망. 100%면 희망자가 모두 그 지역으로 갔고, 낮을수록 경쟁이 셌다는 뜻입니다. 100%인 곳의 커트라인은 경쟁 없이 정해진 값이라 참고만 하세요.</div>
+      <div><b>빈칸과 괄호 없음</b>빈칸은 그해 해당 교과 희망자가 없었던 경우입니다. <code>1/1</code>처럼 괄호가 없는 칸은 원자료에 전보년수가 적혀 있지 않습니다.</div>
+    </div>
+  </section>
+
+  <footer>자료: 「경기도 중등 청간전보 커트라인」 스프레드시트(2020~2025 탭) 정리본. 지역 경계는 통계청 2013 행정구역을 교육지원청 관할(안양과천, 군포의왕, 화성오산, 광주하남, 동두천양주, 구리남양주)로 묶어 그렸습니다. 공식 결과는 경기도교육청 공지를 확인하세요.</footer>
+</div>
+
+<script>
+const DATA=__DATA__;
+const MAP=__MAP__;
+const FULL={안양:"안양과천",군포:"군포의왕",화성:"화성오산",광주:"광주하남",동두천:"동두천양주",구리:"구리남양주"};
+const UPCOMING=["2026"];
+const R=DATA.regions, YEARS=Object.keys(DATA.years).sort();
+const fullName=r=>FULL[r]||r;
+// idx[year][subj][region]={a,h,m}
+const idx={}, subjOrder=[];
+for(const y of [...YEARS].reverse()){idx[y]={};for(const [s,ri,a,h,m] of DATA.years[y]){(idx[y][s]??={})[R[ri]]={a,h,m};if(!subjOrder.includes(s))subjOrder.push(s)}}
+const subjCount=s=>YEARS.reduce((n,y)=>n+Object.keys(idx[y][s]||{}).length,0);
+
+const st={year:YEARS[YEARS.length-1],subj:"국어",region:"수원",metric:"rate",sort:"rate",tmode:"subj"};
+try{const saved=JSON.parse(localStorage.getItem("gg-transfer")||"{}");for(const k of ["year","subj","region","metric","sort","tmode"])if(saved[k])st[k]=saved[k];if(!YEARS.includes(st.year))st.year=YEARS[YEARS.length-1]}catch(e){}
+const save=()=>{try{localStorage.setItem("gg-transfer",JSON.stringify(st))}catch(e){}};
+
+const get=(y,s,r)=>idx[y]?.[s]?.[r];
+const fmtM=m=>m==null?"–":`${Math.floor(m/12)}년 ${m%12}개월`;
+const fmtShort=m=>m==null?"":`${Math.floor(m/12)}.${m%12}`;
+const cell=d=>d?`${d.a}/${d.h}${d.m!=null?`(${fmtShort(d.m)})`:""}`:"";
+const pct=x=>`${Math.round(x*100)}%`;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+const SCALES={
+  rate:{label:"충족률(배치÷희망)",bins:[[1.0001,"100%",1],[0.8,"80~99%",2],[0.6,"60~79%",3],[0.4,"40~59%",4],[0,"40% 미만",5]],
+    cls(d){if(!d)return 0;const x=d.a/d.h;if(x>=1)return 1;if(x>=.8)return 2;if(x>=.6)return 3;if(x>=.4)return 4;return 5},val:d=>pct(d.a/d.h)},
+  cut:{label:"커트라인 전보년수",bins:[[0,"2년 미만",1],[0,"2~3년",2],[0,"3~4년",3],[0,"4~6년",4],[0,"6년 이상",5]],
+    cls(d){if(!d||d.m==null)return 0;const y=d.m/12;if(y<2)return 1;if(y<3)return 2;if(y<4)return 3;if(y<6)return 4;return 5},val:d=>d.m==null?"–":fmtShort(d.m)},
+  hope:{label:"희망 인원",bins:[[0,"1~2명",1],[0,"3~5명",2],[0,"6~14명",3],[0,"15~29명",4],[0,"30명 이상",5]],
+    cls(d){if(!d)return 0;const h=d.h;if(h<=2)return 1;if(h<=5)return 2;if(h<=14)return 3;if(h<=29)return 4;return 5},val:d=>`${d.h}명`}
+};
+const fillVar=c=>c?`var(--s${c})`:"var(--none)";
+
+// ---------- controls ----------
+const $=id=>document.getElementById(id);
+function buildControls(){
+  $("years").innerHTML=YEARS.map(y=>`<button type="button" class="chip" data-y="${y}" aria-pressed="${y===st.year}">${y}</button>`).join("")+
+    UPCOMING.filter(y=>!YEARS.includes(y)).map(y=>`<button type="button" class="chip" disabled title="발표되면 추가됩니다">${y} 예정</button>`).join("");
+  const subs=subjOrder.filter(s=>subjCount(s)>0);
+  $("subj").innerHTML=subs.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join("");
+  $("region").innerHTML=R.map(r=>`<option value="${r}">${fullName(r)}</option>`).join("");
+  if(!subs.includes(st.subj))st.subj="국어";
+}
+$("years").addEventListener("click",e=>{const b=e.target.closest("[data-y]");if(b){st.year=b.dataset.y;render()}});
+$("subj").addEventListener("change",e=>{st.subj=e.target.value;render()});
+$("region").addEventListener("change",e=>{st.region=e.target.value;render()});
+for(const [id,key,attr] of [["metric","metric","m"],["sort","sort","s"],["tmode","tmode","t"]])
+  $(id).addEventListener("click",e=>{const b=e.target.closest(`[data-${attr}]`);if(b){st[key]=b.dataset[attr];render()}});
+const setSeg=(id,attr,v)=>$(id).querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset[attr]===v));
+
+// ---------- stats ----------
+function renderStats(){
+  const ds=R.map(r=>[r,get(st.year,st.subj,r)]).filter(x=>x[1]);
+  const A=ds.reduce((n,[,d])=>n+d.a,0),H=ds.reduce((n,[,d])=>n+d.h,0);
+  const short=ds.filter(([,d])=>d.a<d.h);
+  const top=[...ds].filter(([,d])=>d.m!=null&&d.a<d.h).sort((a,b)=>b[1].m-a[1].m)[0];
+  $("stats").innerHTML=`
+    <div class="stat"><span class="k">${st.year} ${esc(st.subj)} 배치 / 희망</span><span class="v">${A} / ${H}</span><span class="n">${ds.length}개 지역에서 희망</span></div>
+    <div class="stat"><span class="k">전체 충족률</span><span class="v">${H?pct(A/H):"–"}</span><span class="n">희망자 ${H-A}명이 원하는 지역에 가지 못함</span></div>
+    <div class="stat"><span class="k">경쟁 지역 (배치 &lt; 희망)</span><span class="v">${short.length}곳</span><span class="n">${short.length?short.sort((a,b)=>a[1].a/a[1].h-b[1].a/b[1].h).slice(0,3).map(([r])=>fullName(r)).join(", "):"모든 지역 전원 배치"}</span></div>
+    <div class="stat"><span class="k">가장 높은 커트라인 (경쟁 지역)</span><span class="v">${top?fmtM(top[1].m):"–"}</span><span class="n">${top?fullName(top[0])+" · "+cell(top[1]):"경쟁 지역 없음"}</span></div>`;
+}
+
+// ---------- map ----------
+const svg=$("map");
+function buildMap(){
+  svg.setAttribute("viewBox",`0 0 ${MAP.w} ${MAP.h}`);
+  const NUDGE={광명:[4,-2],군포:[8,8],안양:[8,-8],시흥:[-14,6],부천:[-10,-14]};
+  let p="",t="";
+  for(const r of R){const g=MAP.r[r];p+=`<path d="${g.d}" data-r="${r}" tabindex="0" aria-label="${fullName(r)}"></path>`;
+    const [dx,dy]=NUDGE[r]||[0,0];t+=`<text class="ml" x="${g.c[0]+dx}" y="${g.c[1]+dy-3}">${r}</text><text class="mv" data-v="${r}" x="${g.c[0]+dx}" y="${g.c[1]+dy+11}"></text>`}
+  svg.innerHTML=`<g>${p}</g><g>${t}</g>`;
+  const tip=$("tip");
+  svg.addEventListener("click",e=>{const r=e.target.dataset?.r;if(r){st.region=r;render()}});
+  svg.addEventListener("keydown",e=>{const r=e.target.dataset?.r;if(r&&(e.key==="Enter"||e.key===" ")){e.preventDefault();st.region=r;render()}});
+  svg.addEventListener("pointermove",e=>{const r=e.target.dataset?.r;if(!r||e.pointerType==="touch"){tip.hidden=true;return}
+    const d=get(st.year,st.subj,r),box=svg.parentNode.getBoundingClientRect();
+    tip.innerHTML=`<b>${fullName(r)}</b> · ${esc(st.subj)} ${st.year}<br>${d?`배치 ${d.a} / 희망 ${d.h} · 충족률 ${pct(d.a/d.h)}<br>커트라인 ${fmtM(d.m)}`:"희망자 없음"}`;
+    tip.style.left=(e.clientX-box.left)+"px";tip.style.top=(e.clientY-box.top)+"px";tip.hidden=false});
+  svg.addEventListener("pointerleave",()=>tip.hidden=true);
+}
+function renderMap(){
+  const S=SCALES[st.metric];
+  svg.querySelectorAll("path").forEach(p=>{const r=p.dataset.r,d=get(st.year,st.subj,r);p.style.fill=fillVar(S.cls(d));p.classList.toggle("sel",r===st.region)});
+  svg.querySelectorAll(".mv").forEach(t=>{const d=get(st.year,st.subj,t.dataset.v);t.textContent=d?S.val(d):""});
+  const sel=svg.querySelector("path.sel");if(sel)sel.parentNode.appendChild(sel);
+  $("mapTitle").textContent=`${st.year} ${st.subj}`;
+  $("mapSub").textContent=`색: ${S.label} · 지역을 누르면 상세 보기`;
+  $("legend").innerHTML=S.bins.map(([,l,c])=>`<span><i style="background:${fillVar(c)}"></i>${l}</span>`).join("")+`<span><i style="background:var(--none)"></i>희망자 없음${st.metric==="cut"?"·년수 미기재":""}</span>`;
+}
+
+// ---------- detail (region trend) ----------
+function trendSvg(rows){
+  const W=520,H=150,L=34,Rr=10,T=16,B=24,iw=W-L-Rr,ih=H-T-B,n=YEARS.length,bw=iw/n;
+  const max=Math.max(1,...rows.map(d=>d?d.h:0));const nice=max<=5?5:max<=10?10:Math.ceil(max/10)*10;
+  const y=v=>T+ih-(v/nice)*ih;let s="";
+  for(const g of [0,nice/2,nice]){s+=`<line class="grid" x1="${L}" x2="${W-Rr}" y1="${y(g)}" y2="${y(g)}"/><text x="${L-6}" y="${y(g)+4}" text-anchor="end">${g}</text>`}
+  YEARS.forEach((yr,i)=>{const d=rows[i],cx=L+bw*i+bw/2,w=Math.min(34,bw*.55);
+    if(d){s+=`<rect x="${cx-w/2}" y="${y(d.h)}" width="${w}" height="${y(0)-y(d.h)}" fill="var(--hope)" rx="2"/><rect x="${cx-w/2}" y="${y(d.a)}" width="${w}" height="${y(0)-y(d.a)}" fill="var(--placed)" rx="2"/><text class="val" x="${cx}" y="${y(d.h)-4}" text-anchor="middle">${d.a}/${d.h}</text>`}
+    else s+=`<text x="${cx}" y="${y(0)-6}" text-anchor="middle">없음</text>`;
+    s+=`<text x="${cx}" y="${H-6}" text-anchor="middle"${yr===st.year?' style="fill:var(--ink);font-weight:600"':""}>${yr}</text>`});
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="연도별 배치·희망 인원">${s}</svg>`;
+}
+function cutSvg(rows){
+  const W=520,H=140,L=34,Rr=10,T=18,B=24,iw=W-L-Rr,ih=H-T-B,n=YEARS.length,bw=iw/n;
+  const vals=rows.map(d=>d&&d.m!=null?d.m/12:null);const max=Math.max(4,...vals.filter(v=>v!=null));const top=Math.ceil(max/2)*2;
+  const y=v=>T+ih-(v/top)*ih,x=i=>L+bw*i+bw/2;let s="";
+  for(let g=0;g<=top;g+=top>8?4:2)s+=`<line class="grid" x1="${L}" x2="${W-Rr}" y1="${y(g)}" y2="${y(g)}"/><text x="${L-6}" y="${y(g)+4}" text-anchor="end">${g}년</text>`;
+  let path="",pen=false;vals.forEach((v,i)=>{if(v==null){pen=false;return}path+=(pen?"L":"M")+x(i)+","+y(v);pen=true});
+  s+=`<path d="${path}" fill="none" stroke="var(--cut)" stroke-width="2.2"/>`;
+  vals.forEach((v,i)=>{const d=rows[i];if(v!=null){const full=d.a>=d.h;s+=`<circle cx="${x(i)}" cy="${y(v)}" r="${full?4:5}" fill="${full?"var(--surface)":"var(--cut)"}" stroke="var(--cut)" stroke-width="2"/><text class="val" x="${x(i)}" y="${y(v)-9}" text-anchor="middle">${fmtShort(d.m)}</text>`}});
+  YEARS.forEach((yr,i)=>s+=`<text x="${x(i)}" y="${H-6}" text-anchor="middle"${yr===st.year?' style="fill:var(--ink);font-weight:600"':""}>${yr}</text>`);
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="연도별 커트라인 전보년수">${s}</svg>`;
+}
+function renderDetail(){
+  const r=st.region,rows=YEARS.map(y=>get(y,st.subj,r)),d=get(st.year,st.subj,r);
+  const have=rows.filter(Boolean),avgRate=have.length?have.reduce((n,x)=>n+x.a,0)/have.reduce((n,x)=>n+x.h,0):null;
+  const comp=have.filter(x=>x.a<x.h).length;
+  $("detail").innerHTML=`
+    <div class="detail-title"><span class="big">${fullName(r)}</span><span class="sub">${esc(st.subj)} · ${YEARS[0]}~${YEARS[YEARS.length-1]}</span></div>
+    <div class="kv">
+      <div><div class="k">${st.year} 배치/희망</div><div class="v">${d?`${d.a}/${d.h}`:"희망 없음"}</div></div>
+      <div><div class="k">${st.year} 커트라인</div><div class="v">${d?fmtM(d.m):"–"}</div></div>
+      <div><div class="k">${YEARS.length}년 누적 충족률</div><div class="v">${avgRate==null?"–":pct(avgRate)}</div></div>
+    </div>
+    <div><h3 class="sub" style="margin:4px 0">배치 / 희망 인원</h3>${trendSvg(rows)}</div>
+    <div><h3 class="sub" style="margin:4px 0">커트라인 전보년수 <span style="font-weight:400">(● 경쟁 있음 · ○ 전원 배치)</span></h3>${cutSvg(rows)}</div>
+    <p class="note">${YEARS.length}년 중 ${have.length}개 연도에 희망자가 있었고, 그중 ${comp}개 연도는 희망자보다 배치가 적었습니다.</p>`;
+}
+
+// ---------- ranking ----------
+function renderRank(){
+  const ds=R.map(r=>[r,get(st.year,st.subj,r)]).filter(x=>x[1]);
+  const key={rate:([,d])=>d.a/d.h,cut:([,d])=>-(d.m??-1),hope:([,d])=>-d.h}[st.sort];
+  ds.sort((a,b)=>key(a)-key(b)||b[1].h-a[1].h);
+  const max=Math.max(1,...ds.map(([,d])=>d.h));
+  $("rankTitle").textContent=`${st.year} ${st.subj} 지역별 비교`;
+  $("rank").innerHTML=ds.length?ds.map(([r,d])=>`<button type="button" class="rank-row${r===st.region?" sel":""}" data-r="${r}"><span>${fullName(r)}</span><span class="bar" style="width:${Math.max(4,d.h/max*100)}%"><span style="width:${d.a/d.h*100}%"></span></span><span class="r">${d.a}/${d.h} · ${d.m!=null?fmtShort(d.m)+"년":"–"}</span></button>`).join(""):`<p class="note">${st.year}년 ${esc(st.subj)} 희망자가 있는 지역이 없습니다.</p>`;
+}
+$("rank").addEventListener("click",e=>{const b=e.target.closest("[data-r]");if(b){st.region=b.dataset.r;render()}});
+
+// ---------- table ----------
+const rcls=d=>d?SCALES.rate.cls(d):0;
+const td=d=>d?`<td class="r${rcls(d)}" title="충족률 ${pct(d.a/d.h)} · 커트라인 ${fmtM(d.m)}">${d.a}/${d.h}${d.m!=null?`<small>${fmtShort(d.m)}</small>`:""}</td>`:`<td class="emp">·</td>`;
+function renderTable(){
+  let head,rows,title,sub;
+  if(st.tmode==="subj"){
+    title=`${st.subj} · 지역 × 연도`;sub="행을 눌러 지역을 선택할 수 있습니다.";
+    head=`<th>지역</th>`+YEARS.map(y=>`<th>${y}</th>`).join("");
+    rows=R.map(r=>`<tr data-r="${r}"><th>${fullName(r)}</th>${YEARS.map(y=>td(get(y,st.subj,r))).join("")}</tr>`);
+  }else if(st.tmode==="region"){
+    title=`${fullName(st.region)} · 교과 × 연도`;sub="행을 눌러 교과를 선택할 수 있습니다.";
+    head=`<th>교과</th>`+YEARS.map(y=>`<th>${y}</th>`).join("");
+    rows=subjOrder.filter(s=>YEARS.some(y=>get(y,s,st.region))).map(s=>`<tr data-s="${esc(s)}"><th>${esc(s)}</th>${YEARS.map(y=>td(get(y,s,st.region))).join("")}</tr>`);
+  }else{
+    title=`${st.year} · 교과 × 지역`;sub="원자료 시트와 같은 배치입니다. 행을 눌러 교과를 선택할 수 있습니다.";
+    head=`<th>교과</th>`+R.map(r=>`<th>${r}</th>`).join("");
+    rows=subjOrder.filter(s=>R.some(r=>get(st.year,s,r))).map(s=>`<tr data-s="${esc(s)}"><th>${esc(s)}</th>${R.map(r=>td(get(st.year,s,r))).join("")}</tr>`);
+  }
+  $("tableTitle").textContent=title;$("tableSub").textContent=sub+" 칸 색은 충족률, 작은 숫자는 커트라인(년.개월)입니다.";
+  $("table").innerHTML=`<table><thead><tr>${head}</tr></thead><tbody>${rows.join("")}</tbody></table>`;
+  $("tlegend").innerHTML=SCALES.rate.bins.map(([,l,c])=>`<span><i style="background:${fillVar(c)}"></i>${l}</span>`).join("");
+}
+$("table").addEventListener("click",e=>{const tr=e.target.closest("tr");if(!tr)return;if(tr.dataset.r){st.region=tr.dataset.r;render()}else if(tr.dataset.s){st.subj=tr.dataset.s;render()}});
+
+function render(){
+  $("years").querySelectorAll("[data-y]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.y===st.year));
+  $("subj").value=st.subj;$("region").value=st.region;
+  setSeg("metric","m",st.metric);setSeg("sort","s",st.sort);setSeg("tmode","t",st.tmode);
+  renderStats();renderMap();renderDetail();renderRank();renderTable();save();
+}
+buildControls();buildMap();render();
+</script>

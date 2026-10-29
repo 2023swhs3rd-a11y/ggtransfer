@@ -70,6 +70,13 @@ select{font:inherit;font-size:14px;padding:6px 10px;border:1px solid var(--line)
 #map .mv{font-size:12px;fill:var(--ink);font-family:var(--mono)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:var(--muted);align-items:center}
 .legend i{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-3px;margin-right:4px;border:1px solid var(--line)}
+.gtip{position:fixed;z-index:20;pointer-events:none;background:var(--ink);color:var(--bg);font-size:13px;padding:8px 10px;border-radius:6px;line-height:1.5;max-width:260px;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.gtip b{font-weight:700}
+.gtip .t-h{font-weight:700;margin-bottom:2px}
+.gtip .t-row{display:flex;justify-content:space-between;gap:14px;font-variant-numeric:tabular-nums}
+.gtip .t-row span:first-child{opacity:.75}
+.chart .hit{fill:transparent;cursor:default}
+.chart .hit:hover{fill:var(--ink);opacity:.06}
 .tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:13px;padding:6px 9px;border-radius:6px;white-space:nowrap;transform:translate(-50%,-115%);line-height:1.4}
 
 .detail-title{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
@@ -283,6 +290,7 @@ function trendSvg(rows){
     if(d){s+=`<rect x="${cx-w/2}" y="${y(d.h)}" width="${w}" height="${y(0)-y(d.h)}" fill="var(--hope)" rx="2"/><rect x="${cx-w/2}" y="${y(d.a)}" width="${w}" height="${y(0)-y(d.a)}" fill="var(--placed)" rx="2"/><text class="val" x="${cx}" y="${y(d.h)-4}" text-anchor="middle">${d.a}/${d.h}</text>`}
     else s+=`<text x="${cx}" y="${y(0)-6}" text-anchor="middle">없음</text>`;
     s+=`<text x="${cx}" y="${H-6}" text-anchor="middle"${yr===st.year?' style="fill:var(--ink);font-weight:600"':""}>${yr}</text>`});
+  YEARS.forEach((yr,i)=>s+=`<rect class="hit" x="${L+bw*i}" y="${T-12}" width="${bw}" height="${ih+12}" data-tk="${st.region}|${yr}"/>`);
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="연도별 배치·희망 인원">${s}</svg>`;
 }
 function cutSvg(rows){
@@ -294,6 +302,7 @@ function cutSvg(rows){
   s+=`<path d="${path}" fill="none" stroke="var(--cut)" stroke-width="2.2"/>`;
   vals.forEach((v,i)=>{const d=rows[i];if(v!=null){const full=d.a>=d.h;s+=`<circle cx="${x(i)}" cy="${y(v)}" r="${full?4:5}" fill="${full?"var(--surface)":"var(--cut)"}" stroke="var(--cut)" stroke-width="2"/><text class="val" x="${x(i)}" y="${y(v)-9}" text-anchor="middle">${fmtShort(d.m)}</text>`}});
   YEARS.forEach((yr,i)=>s+=`<text x="${x(i)}" y="${H-6}" text-anchor="middle"${yr===st.year?' style="fill:var(--ink);font-weight:600"':""}>${yr}</text>`);
+  YEARS.forEach((yr,i)=>s+=`<rect class="hit" x="${L+bw*i}" y="${T-14}" width="${bw}" height="${ih+14}" data-tk="${st.region}|${yr}"/>`);
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="연도별 커트라인 전보년수">${s}</svg>`;
 }
 function renderDetail(){
@@ -319,7 +328,7 @@ function renderRank(){
   ds.sort((a,b)=>key(a)-key(b)||b[1].h-a[1].h);
   const max=Math.max(1,...ds.map(([,d])=>d.h));
   $("rankTitle").textContent=`${st.year} ${st.subj} 지역별 비교`;
-  $("rank").innerHTML=ds.length?ds.map(([r,d])=>`<button type="button" class="rank-row${r===st.region?" sel":""}" data-r="${r}"><span>${fullName(r)}</span><span class="bar" style="width:${Math.max(4,d.h/max*100)}%"><span style="width:${d.a/d.h*100}%"></span></span><span class="r">${d.a}/${d.h} · ${d.m!=null?fmtShort(d.m)+"년":"–"}</span></button>`).join(""):`<p class="note">${st.year}년 ${esc(st.subj)} 희망자가 있는 지역이 없습니다.</p>`;
+  $("rank").innerHTML=ds.length?ds.map(([r,d])=>`<button type="button" class="rank-row${r===st.region?" sel":""}" data-r="${r}" data-tk="${r}|${st.year}"><span>${fullName(r)}</span><span class="bar" style="width:${Math.max(4,d.h/max*100)}%"><span style="width:${d.a/d.h*100}%"></span></span><span class="r">${d.a}/${d.h} · ${d.m!=null?fmtShort(d.m)+"년":"–"}</span></button>`).join(""):`<p class="note">${st.year}년 ${esc(st.subj)} 희망자가 있는 지역이 없습니다.</p>`;
 }
 $("rank").addEventListener("click",e=>{const b=e.target.closest("[data-r]");if(b){st.region=b.dataset.r;render()}});
 
@@ -346,6 +355,26 @@ function renderTable(){
   $("tlegend").innerHTML=SCALES.rate.bins.map(([,l,c])=>`<span><i style="background:${fillVar(c)}"></i>${l}</span>`).join("");
 }
 $("table").addEventListener("click",e=>{const tr=e.target.closest("tr");if(!tr)return;if(tr.dataset.r){st.region=tr.dataset.r;render()}else if(tr.dataset.s){st.subj=tr.dataset.s;render()}});
+
+// ---------- 상세 툴팁 (막대·추이 그래프) ----------
+const gtip=document.createElement("div");gtip.className="gtip";gtip.hidden=true;document.body.appendChild(gtip);
+function tipHTML(r,y){
+  const d=get(y,st.subj,r),row=(k,v)=>`<div class="t-row"><span>${k}</span><span>${v}</span></div>`;
+  let h=`<div class="t-h">${fullName(r)} · ${esc(st.subj)} · ${y}</div>`;
+  if(!d)return h+`<div>희망자 없음</div>`;
+  const cut=d.m!=null?fmtM(d.m)+` (${fmtShort(d.m)})`:(y>="2026"?"초빙":"미기재");
+  return h+row("배치 / 희망",`${d.a}명 / ${d.h}명`)+row("배치율",pct(d.a/d.h))+row("미배치",`${d.h-d.a}명`)+row("커트라인",cut)+row("구분",d.a<d.h?"경합 지역":"전원 배치");
+}
+document.addEventListener("pointermove",e=>{
+  const el=e.pointerType==="touch"?null:e.target.closest?.("[data-tk]");
+  if(!el){gtip.hidden=true;return}
+  const [r,y]=el.dataset.tk.split("|");gtip.innerHTML=tipHTML(r,y);gtip.hidden=false;
+  const w=gtip.offsetWidth,h=gtip.offsetHeight,vw=document.documentElement.clientWidth;
+  let x=e.clientX+14,yy=e.clientY+14;if(x+w>vw-8)x=e.clientX-w-14;if(yy+h>window.innerHeight-8)yy=e.clientY-h-14;
+  gtip.style.left=Math.max(8,x)+"px";gtip.style.top=Math.max(8,yy)+"px";
+});
+document.addEventListener("pointerleave",()=>gtip.hidden=true);
+document.addEventListener("scroll",()=>gtip.hidden=true,{passive:true,capture:true});
 
 function render(){
   $("years").querySelectorAll("[data-y]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.y===st.year));
